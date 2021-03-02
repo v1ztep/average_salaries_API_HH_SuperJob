@@ -16,14 +16,23 @@ def main():
                  'TypeScript')
     url = 'https://api.hh.ru/vacancies'
 
-    vacancies_count = {}
-    for lang in languages:
-        params = {'text': f'Программист {lang}', 'area': '1', 'period': '30'}
-        response = get_response(url, params)
-        found_num = response.json()['found']
-        vacancies_count[lang] = found_num
+    # vacancies_count = {}
+    # for lang in languages:
+    #     params = {'text': f'Программист {lang}', 'area': '1', 'period': '30'}
+    #     response = get_response(url, params)
+    #     found_num = response.json()['found']
+    #     vacancies_count[lang] = found_num
+    # print(vacancies_count)
 
-    print(vacancies_count)
+    lang = 'Python'
+    params = {'text': f'Программист {lang}', 'area': 1, 'period': 30}
+    response = get_response(url, params)
+    vacancies = response.json()['items']
+
+    for vacancy in vacancies:
+        salary = vacancy['salary']
+        print(salary)
+
 
 if __name__ == '__main__':
     main()
