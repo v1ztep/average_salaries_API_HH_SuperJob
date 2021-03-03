@@ -1,5 +1,6 @@
-import requests
+import statistics
 
+import requests
 import urllib3
 
 
@@ -37,22 +38,27 @@ def main():
                  'TypeScript')
     url = 'https://api.hh.ru/vacancies'
 
-    # vacancies_count = {}
-    # for lang in languages:
-    #     params = {'text': f'Программист {lang}', 'area': '1', 'period': '30'}
-    #     response = get_response(url, params)
-    #     found_num = response.json()['found']
-    #     vacancies_count[lang] = found_num
-    # print(vacancies_count)
+    vacancies_stats = {}
+    for lang in languages:
+        params = {'text': f'Программист {lang}', 'area': '1', 'period': '30'}
+        response = get_response(url, params)
+        vacancies_details = response.json()
+        vacancies_found = vacancies_details['found']
 
-    lang = 'Python'
-    params = {'text': f'Программист {lang}', 'area': 1, 'period': 30}
-    response = get_response(url, params)
-    vacancies = response.json()['items']
+        vacancies = response.json()['items']
+        vacancies_salary = []
+        for vacancy in vacancies:
+            salary = predict_rub_salary(vacancy)
+            if salary:
+                vacancies_salary.append(salary)
 
-    for vacancy in vacancies:
-        salary = predict_rub_salary(vacancy)
-        print(salary)
+        average_salary = statistics.mean(vacancies_salary)
+        vacancies_stats[lang] = {
+            'vacancies_found': vacancies_found,
+            'vacancies_processed': len(vacancies_salary),
+            'average_salary': int(average_salary),
+        }
+    print(vacancies_stats)
 
 
 if __name__ == '__main__':
