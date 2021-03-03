@@ -9,6 +9,27 @@ def get_response(url, params=None):
     return response
 
 
+def predict_rub_salary(vacancy):
+    salary = vacancy['salary']
+    if salary is None:
+        return None
+
+    desired_currency = 'RUR'
+    currency = vacancy['salary']['currency']
+    if currency != desired_currency:
+        return None
+
+    salary_from = salary['from']
+    salary_to = salary['to']
+    if salary_from and salary_to:
+        average_salary = (salary_from + salary_to) / 2
+        return average_salary
+    elif salary_from:
+        return salary_from * 1.2
+    elif salary_to:
+        return salary_to * 0.8
+
+
 def main():
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     languages = ('JavaScript', 'Java', 'Python', 'Ruby', 'PHP', 'C++', 'C#',
@@ -30,7 +51,7 @@ def main():
     vacancies = response.json()['items']
 
     for vacancy in vacancies:
-        salary = vacancy['salary']
+        salary = predict_rub_salary(vacancy)
         print(salary)
 
 
