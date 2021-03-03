@@ -1,4 +1,5 @@
 import statistics
+from itertools import count
 
 import requests
 import urllib3
@@ -40,17 +41,28 @@ def main():
 
     vacancies_stats = {}
     for lang in languages:
-        params = {'text': f'Программист {lang}', 'area': '1', 'period': '30'}
-        response = get_response(url, params)
-        vacancies_details = response.json()
-        vacancies_found = vacancies_details['found']
-
-        vacancies = response.json()['items']
+        first_page = 0
         vacancies_salary = []
-        for vacancy in vacancies:
-            salary = predict_rub_salary(vacancy)
-            if salary:
-                vacancies_salary.append(salary)
+        vacancies_found = []
+        for page in count(first_page):
+            params = {'text': f'Программист {lang}', 'area': '1',
+                      'period': '30', 'per_page': 100, 'page': page}
+            response = get_response(url, params)
+            vacancies_details = response.json()
+
+            vacancies = vacancies_details['items']
+            for vacancy in vacancies:
+                salary = predict_rub_salary(vacancy)
+                if salary:
+                    vacancies_salary.append(salary)
+
+            if page == first_page:
+                vacancies_found = vacancies_details['found']
+
+            last_page = vacancies_details['pages'] - 1
+            if page >= last_page:
+                print(f'{lang} Ok')
+                break
 
         average_salary = statistics.mean(vacancies_salary)
         vacancies_stats[lang] = {
@@ -58,6 +70,7 @@ def main():
             'vacancies_processed': len(vacancies_salary),
             'average_salary': int(average_salary),
         }
+
     print(vacancies_stats)
 
 
