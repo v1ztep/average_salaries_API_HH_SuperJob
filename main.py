@@ -3,6 +3,7 @@ from itertools import count
 
 import requests
 import urllib3
+from dotenv import load_dotenv
 
 
 def get_response(url, params=None):
@@ -69,10 +70,12 @@ def get_hh_stats(languages):
 
 
 def main():
+    load_dotenv()
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     languages = ('JavaScript', 'Java', 'Python', 'Ruby', 'PHP', 'C++', 'C#',
                  'C', 'Go', 'Shell', 'Objective-C', 'Scala', 'Swift',
                  'TypeScript')
+    superjob_api_key = os.getenv('SUPERJOB_API_KEY')
 
     hh_vacancies_stats = get_hh_stats(languages)
     print(hh_vacancies_stats)
