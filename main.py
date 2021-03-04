@@ -28,17 +28,12 @@ def predict_rub_salary(vacancy):
         return average_salary
     elif salary_from:
         return salary_from * 1.2
-    elif salary_to:
+    else:
         return salary_to * 0.8
 
 
-def main():
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    languages = ('JavaScript', 'Java', 'Python', 'Ruby', 'PHP', 'C++', 'C#',
-                 'C', 'Go', 'Shell', 'Objective-C', 'Scala', 'Swift',
-                 'TypeScript')
-    url = 'https://api.hh.ru/vacancies'
-
+def get_hh_stats(languages):
+    hh_api_url = 'https://api.hh.ru/vacancies'
     vacancies_stats = {}
     for lang in languages:
         first_page = 0
@@ -47,7 +42,7 @@ def main():
         for page in count(first_page):
             params = {'text': f'Программист {lang}', 'area': '1',
                       'period': '30', 'per_page': 100, 'page': page}
-            response = get_response(url, params)
+            response = get_response(hh_api_url, params)
             vacancies_details = response.json()
 
             vacancies = vacancies_details['items']
@@ -70,8 +65,17 @@ def main():
             'vacancies_processed': len(vacancies_salary),
             'average_salary': int(average_salary),
         }
+    return vacancies_stats
 
-    print(vacancies_stats)
+
+def main():
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    languages = ('JavaScript', 'Java', 'Python', 'Ruby', 'PHP', 'C++', 'C#',
+                 'C', 'Go', 'Shell', 'Objective-C', 'Scala', 'Swift',
+                 'TypeScript')
+
+    hh_vacancies_stats = get_hh_stats(languages)
+    print(hh_vacancies_stats)
 
 
 if __name__ == '__main__':
