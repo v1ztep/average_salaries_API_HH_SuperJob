@@ -1,3 +1,5 @@
+import json
+import os
 import statistics
 from itertools import count
 
@@ -77,9 +79,24 @@ def main():
                  'TypeScript')
     superjob_api_key = os.getenv('SUPERJOB_API_KEY')
 
-    hh_vacancies_stats = get_hh_stats(languages)
-    print(hh_vacancies_stats)
+    # hh_vacancies_stats = get_hh_stats(languages)
+    # print(hh_vacancies_stats)
 
+    superjob_auth_api_url = 'https://api.superjob.ru/2.0/vacancies/'
+    headers = {
+        'X-Api-App-Id': superjob_api_key,
+    }
+    response = requests.get(superjob_auth_api_url, headers=headers)
+    response.raise_for_status()
+
+
+    # with open("description.json", "w", encoding='utf8') as file:
+    #     json.dump(response.json(), file, ensure_ascii=False, indent=4)
+
+    superjob_vacancies = response.json()['objects']
+    for vacancy in superjob_vacancies:
+        vacancy_profession = vacancy['profession']
+        print(vacancy_profession)
 
 if __name__ == '__main__':
     main()
