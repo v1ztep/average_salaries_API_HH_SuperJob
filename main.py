@@ -8,8 +8,8 @@ import urllib3
 from dotenv import load_dotenv
 
 
-def get_response(url, params=None):
-    response = requests.get(url, params, verify=False)
+def get_response(url, params=None, headers=None):
+    response = requests.get(url, params=params, headers=headers, verify=False)
     response.raise_for_status()
     return response
 
@@ -82,21 +82,21 @@ def main():
     # hh_vacancies_stats = get_hh_stats(languages)
     # print(hh_vacancies_stats)
 
-    superjob_auth_api_url = 'https://api.superjob.ru/2.0/vacancies/'
+    superjob_api_url = 'https://api.superjob.ru/2.0/vacancies/'
     headers = {
         'X-Api-App-Id': superjob_api_key,
     }
-    response = requests.get(superjob_auth_api_url, headers=headers)
-    response.raise_for_status()
+    params = {'town': 4, 'keyword': 'Программист Python'}
+    response = get_response(superjob_api_url, params=params, headers=headers)
 
-
-    # with open("description.json", "w", encoding='utf8') as file:
-    #     json.dump(response.json(), file, ensure_ascii=False, indent=4)
+    with open("description.json", "w", encoding='utf8') as file:
+        json.dump(response.json(), file, ensure_ascii=False, indent=4)
 
     superjob_vacancies = response.json()['objects']
     for vacancy in superjob_vacancies:
         vacancy_profession = vacancy['profession']
-        print(vacancy_profession)
+        vacancy_town = vacancy['town']['title']
+        print(f'{vacancy_profession}, {vacancy_town}')
 
 if __name__ == '__main__':
     main()
