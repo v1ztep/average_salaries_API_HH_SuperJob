@@ -14,18 +14,7 @@ def get_response(url, params=None, headers=None):
     return response
 
 
-def predict_rub_salary(vacancy):
-    salary = vacancy['salary']
-    if salary is None:
-        return None
-
-    desired_currency = 'RUR'
-    currency = vacancy['salary']['currency']
-    if currency != desired_currency:
-        return None
-
-    salary_from = salary['from']
-    salary_to = salary['to']
+def predict_rub_salary(salary_from, salary_to):
     if salary_from and salary_to:
         average_salary = (salary_from + salary_to) / 2
         return average_salary
@@ -37,6 +26,7 @@ def predict_rub_salary(vacancy):
 
 def get_hh_stats(languages):
     hh_api_url = 'https://api.hh.ru/vacancies'
+    desired_currency = 'RUR'
     vacancies_stats = {}
     for lang in languages:
         first_page = 0
@@ -50,9 +40,17 @@ def get_hh_stats(languages):
 
             vacancies = vacancies_details['items']
             for vacancy in vacancies:
-                salary = predict_rub_salary(vacancy)
-                if salary:
-                    vacancies_salary.append(salary)
+                salary = vacancy['salary']
+                if not salary:
+                    continue
+                currency = vacancy['salary']['currency']
+                if currency != desired_currency:
+                    continue
+
+                salary_from = salary['from']
+                salary_to = salary['to']
+                calculated_salary = predict_rub_salary(salary_from, salary_to)
+                vacancies_salary.append(calculated_salary)
 
             if page == first_page:
                 vacancies_found = vacancies_details['found']
@@ -82,12 +80,12 @@ def main():
     # hh_vacancies_stats = get_hh_stats(languages)
     # print(hh_vacancies_stats)
 
-    superjob_api_url = 'https://api.superjob.ru/2.0/vacancies/'
+    sj_api_url = 'https://api.superjob.ru/2.0/vacancies/'
     headers = {
         'X-Api-App-Id': superjob_api_key,
     }
-    params = {'town': 4, 'keyword': 'Программист Python'}
-    response = get_response(superjob_api_url, params=params, headers=headers)
+    params = {'town': 4, 'keyword': 'Программист Python', }
+    response = get_response(sj_api_url, params=params, headers=headers)
 
     with open("description.json", "w", encoding='utf8') as file:
         json.dump(response.json(), file, ensure_ascii=False, indent=4)
