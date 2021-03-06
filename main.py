@@ -1,4 +1,3 @@
-import json
 import os
 import statistics
 from itertools import count
@@ -6,6 +5,7 @@ from itertools import count
 import requests
 import urllib3
 from dotenv import load_dotenv
+from terminaltables import SingleTable
 
 
 def get_response(url, params=None, headers=None):
@@ -57,7 +57,6 @@ def get_hh_stats(languages):
 
             last_page = vacancies_details['pages'] - 1
             if page >= last_page:
-                print(f'{lang} Ok')
                 break
 
         average_salary = statistics.mean(vacancies_salary)
@@ -108,7 +107,6 @@ def get_sj_stats(languages, superjob_api_key):
 
             next_page = vacancies_details['more']
             if not next_page:
-                print(f'{lang} Ok')
                 break
 
         if vacancies_salary:
@@ -123,22 +121,31 @@ def get_sj_stats(languages, superjob_api_key):
     return vacancies_stats
 
 
+def print_table_stats(vacancies_stats, title):
+    stats_table = [('Язык программирования', 'Вакансий найдено',
+                    'Вакансий обработано', 'Средняя зарплата')]
+
+    for lang, stats in vacancies_stats.items():
+        lang_stats = [lang, *stats.values()]
+        stats_table.append(lang_stats)
+
+    table_instance = SingleTable(stats_table, title)
+    print(table_instance.table)
+
+
 def main():
     load_dotenv()
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     languages = (
         'JavaScript', 'Java', 'Python', 'Ruby', 'PHP', 'C++', 'C#', 'C', 'Go',
-        'Shell', 'Objective-C', 'Scala', 'Swift', 'TypeScript')
+        'Shell', 'Objective-C', 'Scala', 'Swift', 'TypeScript', '1C')
     superjob_api_key = os.getenv('SUPERJOB_API_KEY')
 
-    # hh_vacancies_stats = get_hh_stats(languages)
-    # print(hh_vacancies_stats)
+    hh_vacancies_stats = get_hh_stats(languages)
+    print_table_stats(hh_vacancies_stats, 'HeadHunter Moscow')
 
     sj_vacancies_stats = get_sj_stats(languages, superjob_api_key)
-    print(sj_vacancies_stats)
-
-    with open("description.json", "w", encoding='utf8') as file:
-        json.dump(sj_vacancies_stats, file, ensure_ascii=False, indent=4)
+    print_table_stats(sj_vacancies_stats, 'SuperJob Moscow')
 
 
 if __name__ == '__main__':
