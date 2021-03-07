@@ -24,13 +24,13 @@ def predict_rub_salary(salary_from, salary_to):
         return salary_to * 0.8
 
 
-def get_hh_stats(languages):
+def predict_rub_salary_hh(languages):
     hh_api_url = 'https://api.hh.ru/vacancies'
     desired_currency = 'RUR'
     vacancies_stats = {}
     for lang in languages:
         first_page = 0
-        vacancies_salary = []
+        vacancies_salaries = []
         vacancies_found = []
         for page in count(first_page):
             params = {'text': f'Программист {lang}', 'area': '1',
@@ -50,7 +50,7 @@ def get_hh_stats(languages):
                 salary_from = salary['from']
                 salary_to = salary['to']
                 calculated_salary = predict_rub_salary(salary_from, salary_to)
-                vacancies_salary.append(calculated_salary)
+                vacancies_salaries.append(calculated_salary)
 
             if page == first_page:
                 vacancies_found = vacancies_details['found']
@@ -59,22 +59,22 @@ def get_hh_stats(languages):
             if page >= last_page:
                 break
 
-        average_salary = statistics.mean(vacancies_salary)
+        average_salary = statistics.mean(vacancies_salaries)
         vacancies_stats[lang] = {
             'vacancies_found': vacancies_found,
-            'vacancies_processed': len(vacancies_salary),
+            'vacancies_processed': len(vacancies_salaries),
             'average_salary': int(average_salary),
         }
     return vacancies_stats
 
 
-def get_sj_stats(languages, superjob_api_key):
+def predict_rub_salary_sj(languages, superjob_api_key):
     sj_api_url = 'https://api.superjob.ru/2.0/vacancies/'
     desired_currency = 'rub'
     vacancies_stats = {}
     for lang in languages:
         first_page = 0
-        vacancies_salary = []
+        vacancies_salaries = []
         vacancies_found = []
         for page in count(first_page):
             params = {
@@ -89,9 +89,6 @@ def get_sj_stats(languages, superjob_api_key):
                 vacancies_found = vacancies_details['total']
 
             vacancies = vacancies_details['objects']
-            if not vacancies:
-                break
-
             for vacancy in vacancies:
                 currency = vacancy['currency']
                 if currency != desired_currency:
@@ -103,19 +100,19 @@ def get_sj_stats(languages, superjob_api_key):
                     continue
 
                 calculated_salary = predict_rub_salary(salary_from, salary_to)
-                vacancies_salary.append(calculated_salary)
+                vacancies_salaries.append(calculated_salary)
 
-            next_page = vacancies_details['more']
-            if not next_page:
+            more_page = vacancies_details['more']
+            if not more_page:
                 break
 
-        if vacancies_salary:
-            average_salary = statistics.mean(vacancies_salary)
+        if vacancies_salaries:
+            average_salary = statistics.mean(vacancies_salaries)
         else:
             average_salary = 0
         vacancies_stats[lang] = {
             'vacancies_found': vacancies_found,
-            'vacancies_processed': len(vacancies_salary),
+            'vacancies_processed': len(vacancies_salaries),
             'average_salary': int(average_salary),
         }
     return vacancies_stats
@@ -141,10 +138,10 @@ def main():
         'Shell', 'Objective-C', 'Scala', 'Swift', 'TypeScript', '1C')
     superjob_api_key = os.getenv('SUPERJOB_API_KEY')
 
-    hh_vacancies_stats = get_hh_stats(languages)
+    hh_vacancies_stats = predict_rub_salary_hh(languages)
     print_table_stats(hh_vacancies_stats, 'HeadHunter Moscow')
 
-    sj_vacancies_stats = get_sj_stats(languages, superjob_api_key)
+    sj_vacancies_stats = predict_rub_salary_sj(languages, superjob_api_key)
     print_table_stats(sj_vacancies_stats, 'SuperJob Moscow')
 
 
