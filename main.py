@@ -33,8 +33,13 @@ def predict_rub_salary_hh(languages):
         vacancies_salaries = []
         vacancies_found = []
         for page in count(first_page):
-            params = {'text': f'Программист {lang}', 'area': '1',
-                      'period': '30', 'per_page': 100, 'page': page}
+            params = {
+                'text': f'Программист {lang}',
+                'area': '1',
+                'period': '30',
+                'per_page': 100,
+                'page': page
+            }
             response = get_response(hh_api_url, params=params)
             vacancies_details = response.json()
 
@@ -78,8 +83,11 @@ def predict_rub_salary_sj(languages, superjob_api_key):
         vacancies_found = []
         for page in count(first_page):
             params = {
-                'town': 4, 'page': page, 'count': 10,
-                'keywords[1][srws]': 1, 'keywords[1][keys]': lang
+                'town': 4,
+                'page': page,
+                'count': 10,
+                'keywords[1][srws]': 1,
+                'keywords[1][keys]': lang
             }
             headers = {'X-Api-App-Id': superjob_api_key}
             response = get_response(sj_api_url, params=params, headers=headers)
@@ -119,8 +127,12 @@ def predict_rub_salary_sj(languages, superjob_api_key):
 
 
 def print_table_stats(vacancies_stats, title):
-    stats_table = [('Язык программирования', 'Вакансий найдено',
-                    'Вакансий обработано', 'Средняя зарплата')]
+    stats_table = [(
+        'Язык программирования',
+        'Вакансий найдено',
+        'Вакансий обработано',
+        'Средняя зарплата'
+    )]
 
     for lang, stats in vacancies_stats.items():
         lang_stats = [lang, *stats.values()]
@@ -134,8 +146,22 @@ def main():
     load_dotenv()
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     languages = (
-        'JavaScript', 'Java', 'Python', 'Ruby', 'PHP', 'C++', 'C#', 'C', 'Go',
-        'Shell', 'Objective-C', 'Scala', 'Swift', 'TypeScript', '1C')
+        'JavaScript',
+        'Java',
+        'Python',
+        'Ruby',
+        'PHP',
+        'C++',
+        'C#',
+        'C',
+        'Go',
+        'Shell',
+        'Objective-C',
+        'Scala',
+        'Swift',
+        'TypeScript',
+        '1C'
+    )
     superjob_api_key = os.getenv('SUPERJOB_API_KEY')
 
     hh_vacancies_stats = predict_rub_salary_hh(languages)
