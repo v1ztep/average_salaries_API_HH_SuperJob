@@ -45,14 +45,17 @@ def get_vacancies_salaries_hh(vacancies):
 def get_hh_vacancies_stats(lang):
     hh_api_url = 'https://api.hh.ru/vacancies'
     first_page = 0
+    moscow_area = 1
+    period_days = 30
+    vacansies_per_page = 100
 
     vacancies_salaries = []
     for page in count(first_page):
         params = {
             'text': f'Программист {lang}',
-            'area': 1,
-            'period': 30,
-            'per_page': 100,
+            'area': moscow_area,
+            'period': period_days,
+            'per_page': vacansies_per_page,
             'page': page
         }
         response = get_response(hh_api_url, params=params)
@@ -109,14 +112,18 @@ def get_vacancies_salaries_sj(vacancies):
 def get_sj_vacancies_stats(lang, superjob_api_key):
     sj_api_url = 'https://api.superjob.ru/2.0/vacancies/'
     first_page = 0
+    moscow_town = 4
+    vacansies_per_page = 10
+    search_on_position = 1
+
 
     vacancies_salaries = []
     for page in count(first_page):
         params = {
-            'town': 4,
+            'town': moscow_town,
             'page': page,
-            'count': 10,
-            'keywords[1][srws]': 1,
+            'count': vacansies_per_page,
+            'keywords[1][srws]': search_on_position,
             'keywords[1][keys]': lang
         }
         headers = {'X-Api-App-Id': superjob_api_key}
