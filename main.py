@@ -49,15 +49,17 @@ def get_hh_vacancies_stats(lang):
     period_days = 30
     vacansies_per_page = 100
 
+    params = {
+        'text': f'Программист {lang}',
+        'area': moscow_area,
+        'period': period_days,
+        'per_page': vacansies_per_page,
+        'page': None
+    }
+
     vacancies_salaries = []
     for page in count(first_page):
-        params = {
-            'text': f'Программист {lang}',
-            'area': moscow_area,
-            'period': period_days,
-            'per_page': vacansies_per_page,
-            'page': page
-        }
+        params['page'] = page
         response = get_response(hh_api_url, params=params)
         vacancies_details = response.json()
 
@@ -116,17 +118,19 @@ def get_sj_vacancies_stats(lang, superjob_api_key):
     vacansies_per_page = 10
     search_on_position = 1
 
+    params = {
+        'town': moscow_town,
+        'page': None,
+        'count': vacansies_per_page,
+        'keywords[1][srws]': search_on_position,
+        'keywords[1][keys]': lang
+    }
+    headers = {'X-Api-App-Id': superjob_api_key}
+
 
     vacancies_salaries = []
     for page in count(first_page):
-        params = {
-            'town': moscow_town,
-            'page': page,
-            'count': vacansies_per_page,
-            'keywords[1][srws]': search_on_position,
-            'keywords[1][keys]': lang
-        }
-        headers = {'X-Api-App-Id': superjob_api_key}
+        params['page'] = page
         response = get_response(sj_api_url, params=params, headers=headers)
         vacancies_details = response.json()
 
