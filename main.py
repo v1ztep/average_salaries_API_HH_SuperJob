@@ -24,105 +24,134 @@ def predict_rub_salary(salary_from, salary_to):
         return salary_to * 0.8
 
 
-def predict_rub_salary_hh(languages):
-    hh_api_url = 'https://api.hh.ru/vacancies'
+def get_vacancies_salaries_hh(vacancies):
     desired_currency = 'RUR'
+    vacancies_salaries = []
+    for vacancy in vacancies:
+        salary = vacancy['salary']
+        if not salary:
+            continue
+        currency = vacancy['salary']['currency']
+        if currency != desired_currency:
+            continue
+
+        salary_from = salary['from']
+        salary_to = salary['to']
+        calculated_salary = predict_rub_salary(salary_from, salary_to)
+        vacancies_salaries.append(calculated_salary)
+    return vacancies_salaries
+
+
+def get_hh_vacancies_stats(lang):
+    hh_api_url = 'https://api.hh.ru/vacancies'
+    first_page = 0
+
+    vacancies_salaries = []
+    for page in count(first_page):
+        params = {
+            'text': f'Программист {lang}',
+            'area': 1,
+            'period': 30,
+            'per_page': 100,
+            'page': page
+        }
+        response = get_response(hh_api_url, params=params)
+        vacancies_details = response.json()
+
+        vacancies = vacancies_details['items']
+        vacancies_salaries.extend(get_vacancies_salaries_hh(vacancies))
+
+        last_page = vacancies_details['pages'] - 1
+        if page >= last_page:
+            break
+
+    vacancies_found = vacancies_details['found']
+    vacancies_processed = len(vacancies_salaries)
+    average_salary = statistics.mean(vacancies_salaries)
+
+    return vacancies_found, vacancies_processed, average_salary
+
+
+def predict_rub_salary_hh(languages):
     vacancies_stats = {}
     for lang in languages:
-        first_page = 0
-        vacancies_salaries = []
-        vacancies_found = []
-        for page in count(first_page):
-            params = {
-                'text': f'Программист {lang}',
-                'area': '1',
-                'period': '30',
-                'per_page': 100,
-                'page': page
-            }
-            response = get_response(hh_api_url, params=params)
-            vacancies_details = response.json()
+        vacancies_found, vacancies_processed, average_salary = \
+            get_hh_vacancies_stats(lang)
 
-            vacancies = vacancies_details['items']
-            for vacancy in vacancies:
-                salary = vacancy['salary']
-                if not salary:
-                    continue
-                currency = vacancy['salary']['currency']
-                if currency != desired_currency:
-                    continue
-
-                salary_from = salary['from']
-                salary_to = salary['to']
-                calculated_salary = predict_rub_salary(salary_from, salary_to)
-                vacancies_salaries.append(calculated_salary)
-
-            if page == first_page:
-                vacancies_found = vacancies_details['found']
-
-            last_page = vacancies_details['pages'] - 1
-            if page >= last_page:
-                break
-
-        average_salary = statistics.mean(vacancies_salaries)
         vacancies_stats[lang] = {
             'vacancies_found': vacancies_found,
-            'vacancies_processed': len(vacancies_salaries),
+            'vacancies_processed': vacancies_processed,
             'average_salary': int(average_salary),
         }
     return vacancies_stats
 
 
-def predict_rub_salary_sj(languages, superjob_api_key):
-    sj_api_url = 'https://api.superjob.ru/2.0/vacancies/'
+def get_vacancies_salaries_sj(vacancies):
     desired_currency = 'rub'
+
+    vacancies_salaries = []
+    for vacancy in vacancies:
+        currency = vacancy['currency']
+        if currency != desired_currency:
+            continue
+
+        salary_from = vacancy['payment_from']
+        salary_to = vacancy['payment_to']
+        if not salary_from and not salary_to:
+            continue
+
+        calculated_salary = predict_rub_salary(salary_from, salary_to)
+        vacancies_salaries.append(calculated_salary)
+
+    return vacancies_salaries
+
+
+def get_sj_vacancies_stats(lang, superjob_api_key):
+    sj_api_url = 'https://api.superjob.ru/2.0/vacancies/'
+    first_page = 0
+
+    vacancies_salaries = []
+    for page in count(first_page):
+        params = {
+            'town': 4,
+            'page': page,
+            'count': 10,
+            'keywords[1][srws]': 1,
+            'keywords[1][keys]': lang
+        }
+        headers = {'X-Api-App-Id': superjob_api_key}
+        response = get_response(sj_api_url, params=params, headers=headers)
+        vacancies_details = response.json()
+
+        vacancies = vacancies_details['objects']
+        vacancies_salaries.extend(get_vacancies_salaries_sj(vacancies))
+
+        more_page = vacancies_details['more']
+        if not more_page:
+            break
+
+    vacancies_found = vacancies_details['total']
+    vacancies_processed = len(vacancies_salaries)
+    if vacancies_salaries:
+        average_salary = statistics.mean(vacancies_salaries)
+    else:
+        average_salary = 0
+
+    return vacancies_found, vacancies_processed, average_salary
+
+
+def predict_rub_salary_sj(languages, superjob_api_key):
     vacancies_stats = {}
     for lang in languages:
-        first_page = 0
-        vacancies_salaries = []
-        vacancies_found = []
-        for page in count(first_page):
-            params = {
-                'town': 4,
-                'page': page,
-                'count': 10,
-                'keywords[1][srws]': 1,
-                'keywords[1][keys]': lang
-            }
-            headers = {'X-Api-App-Id': superjob_api_key}
-            response = get_response(sj_api_url, params=params, headers=headers)
-            vacancies_details = response.json()
+        vacancies_found, vacancies_processed, average_salary = \
+            get_sj_vacancies_stats(lang, superjob_api_key)
 
-            if page == first_page:
-                vacancies_found = vacancies_details['total']
-
-            vacancies = vacancies_details['objects']
-            for vacancy in vacancies:
-                currency = vacancy['currency']
-                if currency != desired_currency:
-                    continue
-
-                salary_from = vacancy['payment_from']
-                salary_to = vacancy['payment_to']
-                if not salary_from and not salary_to:
-                    continue
-
-                calculated_salary = predict_rub_salary(salary_from, salary_to)
-                vacancies_salaries.append(calculated_salary)
-
-            more_page = vacancies_details['more']
-            if not more_page:
-                break
-
-        if vacancies_salaries:
-            average_salary = statistics.mean(vacancies_salaries)
-        else:
-            average_salary = 0
         vacancies_stats[lang] = {
             'vacancies_found': vacancies_found,
-            'vacancies_processed': len(vacancies_salaries),
+            'vacancies_processed': vacancies_processed,
             'average_salary': int(average_salary),
         }
+
     return vacancies_stats
 
 
