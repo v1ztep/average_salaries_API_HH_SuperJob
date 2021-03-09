@@ -174,7 +174,12 @@ def get_table_stats(vacancies_stats, title):
     )]
 
     for lang, stats in vacancies_stats.items():
-        lang_stats = [lang, *stats.values()]
+        lang_stats = [
+            lang,
+            stats['vacancies_found'],
+            stats['vacancies_processed'],
+            stats['average_salary']
+        ]
         stats_table.append(lang_stats)
 
     table_instance = SingleTable(stats_table, title)
