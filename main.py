@@ -127,7 +127,6 @@ def get_sj_vacancies_stats(lang, superjob_api_key):
     }
     headers = {'X-Api-App-Id': superjob_api_key}
 
-
     vacancies_salaries = []
     for page in count(first_page):
         params['page'] = page
@@ -166,7 +165,7 @@ def predict_rub_salary_sj(languages, superjob_api_key):
     return vacancies_stats
 
 
-def print_table_stats(vacancies_stats, title):
+def get_table_stats(vacancies_stats, title):
     stats_table = [(
         'Язык программирования',
         'Вакансий найдено',
@@ -179,7 +178,7 @@ def print_table_stats(vacancies_stats, title):
         stats_table.append(lang_stats)
 
     table_instance = SingleTable(stats_table, title)
-    print(table_instance.table)
+    return table_instance.table
 
 
 def main():
@@ -205,10 +204,12 @@ def main():
     superjob_api_key = os.getenv('SUPERJOB_API_KEY')
 
     hh_vacancies_stats = predict_rub_salary_hh(languages)
-    print_table_stats(hh_vacancies_stats, 'HeadHunter Moscow')
+    hh_table_stats = get_table_stats(hh_vacancies_stats, 'HeadHunter Moscow')
+    print(hh_table_stats)
 
     sj_vacancies_stats = predict_rub_salary_sj(languages, superjob_api_key)
-    print_table_stats(sj_vacancies_stats, 'SuperJob Moscow')
+    sj_table_stats = get_table_stats(sj_vacancies_stats, 'SuperJob Moscow')
+    print(sj_table_stats)
 
 
 if __name__ == '__main__':
