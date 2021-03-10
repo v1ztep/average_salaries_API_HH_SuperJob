@@ -136,7 +136,7 @@ def get_sj_vacancies_stats(lang, superjob_api_key):
         vacancies = vacancies_details['objects']
         if not vacancies:
             break
-            
+
         vacancies_salaries.extend(get_vacancies_salaries_sj(vacancies))
 
         more_page = vacancies_details['more']
